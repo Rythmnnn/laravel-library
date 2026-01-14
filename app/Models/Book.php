@@ -12,6 +12,8 @@ class Book extends Model
         'year',
         'qty',
         'title',
+        'cover',
+        'filename',
     ];
 
     public function withCategory()
