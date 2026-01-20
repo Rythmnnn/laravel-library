@@ -20,8 +20,18 @@ class BookServiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if (isset($request->search)) {
+            $data = $this->book->search($request->search);
+
+            return response([
+                'message' => count($data) > 0 ? 'list book found!' : 'list book not found',
+                'data' => $data,
+            ], count($data) > 0 ? 200 : 404);
+
+        }
+
         return response([
             'message' => 'list book found!',
             'data' => $this->book->withCategory(),
