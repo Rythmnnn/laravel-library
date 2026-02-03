@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Borrow extends Model
 {
@@ -17,13 +17,13 @@ class Borrow extends Model
         'fine',
     ];
 
-    public function user(): BelongsTo
+    public function user(): HasOne
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(User::class);
     }
 
-    public function book(): BelongsTo
+    public function book(): HasOne
     {
-        return $this->belongsTo(Book::class);
+        return $this->hasOne(Book::class);
     }
 }
