@@ -21,4 +21,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/borrow', [BorrowServiceController::class, 'index']);
     Route::post('/borrow', [BorrowServiceController::class, 'store']);
+    Route::put('/borrow/{id}', [BorrowServiceController::class, 'returnBorrow']);
 });

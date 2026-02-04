@@ -55,8 +55,6 @@ class BorrowServiceController extends Controller
             $request->validate([
                 'book_id' => 'required|exists:books,id',
                 'user_id' => 'required|exists:users,id',
-                'qty' => 'required|digits_between:1,2',
-                'user_id' => 'required|exists:users,id',
             ]);
 
             $borrowData = $this->borrow->where([
@@ -64,8 +62,8 @@ class BorrowServiceController extends Controller
                 'book_id' => $request->book_id,
             ])->first();
 
-            if ($borrowData) {
-                // nanti disini logic kalo ada datanya
+            if ($borrowData && ! isset($borrowData->return_borrow)) {
+
                 return response([
                     'data' => $borrowData,
                     'message' => 'book has not  return!',
@@ -78,21 +76,63 @@ class BorrowServiceController extends Controller
                 'book_id' => $request->book_id,
                 'user_id' => $request->user_id,
                 'qty' => 1,
-                'user_id' => $request->user_id,
                 'start_borrow' => $date->now(),
                 'end_borrow' => $date->addDays(3),
                 'fine' => 0,
             ]);
 
+            $book = $this->book->find($request->book_id);
+            $book->qty -= 1;
+            $book->save();
+
             return response([
                 'data' => $borrowData,
                 'message' => 'borrow success!',
-            ], 401);
+            ], 201);
         }
 
         return response([
             'message' => 'only admin access!',
         ], 401);
 
+    }
+
+    public function returnBorrow(Request $request, $id)
+    {
+        $user = $request->user()->load('role');
+
+        if ($user->role[0]->role_name == 'admin') {
+            $date = new Carbon;
+            $borrowData = $this->borrow->findOrFail($id);
+
+            $day1 = $date->parse($borrowData->end_borrow);
+            $day2 = $date->parse($date->now());
+
+            if (isset($borrowData->return_borrow)) {
+                return response([
+                    'data' => $borrowData,
+                    'message' => 'data can\'t changed!',
+                ], 422);
+            }
+
+            if ($day2 > $day1) {
+                $dayAccumulate = $day1->diffInDays($day2);
+                $borrowData->fine = floor($dayAccumulate) * 1000;
+            }
+            $borrowData->return_borrow = $date->now();
+            $borrowData->save();
+            $book = $this->book->find($borrowData->book_id);
+            $book->qty += 1;
+            $book->save();
+
+            return response([
+                'data' => $borrowData,
+                'message' => 'return borrow success!',
+            ], 200);
+        }
+
+        return response([
+            'message' => 'only admin access!',
+        ], 401);
     }
 }
